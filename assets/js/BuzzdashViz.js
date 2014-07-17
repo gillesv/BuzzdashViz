@@ -147,6 +147,10 @@ BuzzdashViz.prototype = {
 			$.extend(this.options, dataOptions);
 		}
 				
+		if(this.options.svg) {
+			this.options.pixelRatio = 1;
+		}
+				
 		if(this.options.campaignID == null || this.options.campaignID == undefined) {
 			alert("Error: can't graph results, no campaign ID was provided");
 			
@@ -422,7 +426,7 @@ BuzzdashViz.prototype = {
 		$el.empty();
 		
 		if(this.options.svg) {
-			this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width, Height: this.stage.height, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
+			this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width/ this.options.pixelRatio, Height: this.stage.height/ this.options.pixelRatio, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
 			
 			$el.append(this.svg);
 		} else {
