@@ -27,7 +27,10 @@ BuzzdashViz.prototype = {
 		animationDuration: 60,	// duration in frames
 		pixelRatio: 1,			// for dealing with retina, hi-dpi, etc...
 		resizable: true,		// is this static or liquid?
-		cansave: true			// can you right click>save on the visual? (toggles between attaching canvas & img)
+		cansave: true,			// can you right click>save on the visual? (toggles between attaching canvas & img)
+		svg: false,				// toggle between using SVG or canvas to render the chart
+		startDate: null,		// optional: datestring for the start of the to be visualised metrics
+		endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
 	},		
 	
 	$img: null, 		// container for the canvas data-url
@@ -128,6 +131,18 @@ BuzzdashViz.prototype = {
 				dataOptions["pixelRatio"] = $ref.$el.data("pixel-ratio");
 			}
 			
+			if($ref.$el.data("svg") !== undefined) {
+				dataOptions["svg"] = $ref.$el.data("svg");
+			}
+			
+			if($ref.$el.data("start-date") !== undefined) {
+				dataOptions["startDate"] = $ref.$el.data("start-date");
+			}
+			
+			if($ref.$el.data("end-date") !== undefined) {
+				dataOptions["endDate"] = $ref.$el.data("end-date");
+			}
+			
 			$.extend(this.options, dataOptions);
 		}
 				
@@ -163,7 +178,7 @@ BuzzdashViz.prototype = {
 		};
 		this.api.loadCampaign(this.options.campaignID);
 		
-		// requestanimationframe - setup render loop
+		// requestanimationframe - setup render loops		
 		(function animLoop() {
 			requestAnimationFrame(animLoop);
 			if($ref.needsRender) {
@@ -186,11 +201,8 @@ BuzzdashViz.prototype = {
 			numbars,
 			barwidth,
 			bargap,
-			marginw = 0,
-			marginh = 0,
-			scale,
-			max_views = 0,
-			max_shares = 0;
+			scale;
+			
 		
 		numbars = mq.numbars;
 		barwidth = mq.barwidth * options.pixelRatio;
@@ -199,8 +211,95 @@ BuzzdashViz.prototype = {
 		// scale
 		scale = (((stage.height - 10)/2) / data.max_views)/2;
 		
+		// normalisation of data & margins calculations
+		if(views.length == 0 && mq != null){
+			this.normalizeData();
+		}
 		
-		// generate data & calculate margins
+		// draw bargraphs		
+		if(options.svg) {
+			this.renderSVG(views, shares, numbars, scale, barwidth, bargap);
+		} else {
+			this.renderCanvas(ctx, views, shares, numbars, scale, barwidth, bargap);
+		}
+		
+		// advance playhead
+		$ref.advancePlayhead(options, stage);
+		
+		if(options.cansave) {
+			$ref.$img.attr('src', $ref.canvas.toDataURL());
+		}
+	},
+	
+	// specialized drawing code for <svg>
+	renderSVG: function(views, shares, numbars, scale, barwidth, bargap) {
+		// TODO
+	},
+	
+	// specialized drawing code for <canvas>
+	renderCanvas: function(ctx, views, shares, numbars, scale, barwidth, bargap) {
+		var stage = this.stage,
+			options = this.options;
+	
+		ctx.clearRect(0, 0, stage.width, stage.height);
+			
+		for(var i = 0; i < views.length; i++) {
+			var view = views[i], 
+				share = shares[i];
+						
+			if(view !== undefined) {
+				if(options.animated) {
+					view.anim = share.anim = Math.min(Math.ceil(options.animationDuration/numbars), Math.max(0, stage.playhead - i)); 
+				} else {
+					view.anim = share.anim = Math.max(1, Math.ceil(options.animationDuration/numbars));
+				}
+			
+				var view_height = Math.max(Math.round(view.count*scale), 1) * (view.anim / Math.ceil(options.animationDuration/numbars)),
+					share_height = Math.max(Math.round(share.count*scale), 1) * (share.anim / Math.ceil(options.animationDuration/numbars)),
+					xoffset = i * (barwidth + bargap) + stage.marginw,
+					yoffset_views = Math.round(((stage.height)/2) - view_height + stage.marginh/2),
+					yoffset_shares = Math.round(((stage.height)/2) + bargap + stage.marginh/2);
+					
+				ctx.fillStyle = stage.views_color;
+				ctx.fillRect(xoffset, yoffset_views, barwidth, view_height);
+				
+				ctx.fillStyle = stage.shares_color;
+				ctx.fillRect(xoffset, yoffset_shares, barwidth, share_height);
+			} 
+		}
+	},
+	
+	advancePlayhead: function(options, stage) {
+		if(options.animated) {
+			stage.playhead ++;
+			
+			if(stage.playhead == options.animationDuration) {
+				this.needsRender = false;
+			}
+		}
+	},
+	
+	// generate optimized data & calculate margins
+	normalizeData: function() {
+		// local vars
+		var $ref = this,
+			stage = this.stage,
+			data = this.data,
+			options = this.options,
+			views = this.stage.views,
+			shares = this.stage.shares,
+			mq = this.stage.media[stage.selectedmedia],
+			numbars,
+			barwidth, 
+			bargap,
+			max_views = 0,
+			max_shares = 0,
+			scale = (((stage.height - 10)/2) / data.max_views)/2;
+			
+		numbars = mq.numbars;
+		barwidth = mq.barwidth * options.pixelRatio;
+		bargap = mq.bargap * options.pixelRatio;
+			
 		if(views.length == 0 && mq != null) {
 			var timeline,
 				data_per_bar,
@@ -242,50 +341,7 @@ BuzzdashViz.prototype = {
 			// margins
 			stage.marginw = (stage.width - (views.length * (barwidth + bargap)))/2;
 			stage.marginh = (stage.height - ((max_views + max_shares)*scale + bargap))/2;
-
 		}
-		
-		// draw bargraphs
-		
-		// clear 
-		ctx.clearRect(0, 0, stage.width, stage.height);
-		
-		for(var i = 0; i < views.length; i++) {
-			var view = views[i], 
-				share = shares[i];
-						
-			if(view !== undefined) {
-				if(options.animated) {
-					view.anim = share.anim = Math.min(Math.ceil(options.animationDuration/numbars), Math.max(0, stage.playhead - i)); //Math.max(0, Math.min(options.animationDuration, stage.playhead*(views.length - i))); 
-				} else {
-					view.anim = share.anim = Math.max(1, Math.ceil(options.animationDuration/numbars));
-				}
-			
-				var view_height = Math.max(Math.round(view.count*scale), 1) * (view.anim / Math.ceil(options.animationDuration/numbars)),
-					share_height = Math.max(Math.round(share.count*scale), 1) * (share.anim / Math.ceil(options.animationDuration/numbars)),
-					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.round(((stage.height)/2) - view_height + stage.marginh/2),
-					yoffset_shares = Math.round(((stage.height)/2) + bargap + stage.marginh/2);
-					
-				ctx.fillStyle = stage.views_color;
-				ctx.fillRect(xoffset, yoffset_views, barwidth, view_height);
-				
-				ctx.fillStyle = stage.shares_color;
-				ctx.fillRect(xoffset, yoffset_shares, barwidth, share_height);
-			} 
-		}
-		
-		// advance playhead
-		if(options.animated) {
-			stage.playhead ++;
-			
-			if(stage.playhead == options.animationDuration) {
-				$ref.needsRender = false;
-			}
-		}
-		
-		
-		$ref.$img.attr('src', $ref.canvas.toDataURL());
 	},
 	
 	createMarkup: function($el) {
