@@ -21,12 +21,17 @@
 			
 			-webkit-box-shadow: 0 15px 15px rgba(0, 0, 0, .34);
 		}
+		
+		svg {
+			display: block;
+			height: 100%;
+		}
 	</style>
 </head>
 <body>
 
 
-	<div class="buzzdashviz" data-campaign-id="110" data-animated="true" data-animation-duration="200" data-resizable="true" data-can-save="false">
+	<div class="buzzdashviz" data-campaign-id="110" data-animated="true" data-animation-duration="200" data-resizable="true" data-can-save="false" data-svg="true">
 		<noscript>Javascript goes here</noscript>
 	</div>
 
@@ -37,7 +42,6 @@
 	
 	<script>
 		//<![CDATA[
-				
 		$(document).ready(function() {
 			$('.buzzdashviz').each(function(i) {
 				
@@ -50,7 +54,6 @@
 				var viz = new BuzzdashViz($(this));
 			});
 		});
-		
 		//]]>
 	</script>
 

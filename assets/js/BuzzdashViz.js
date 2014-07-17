@@ -34,7 +34,8 @@ BuzzdashViz.prototype = {
 	},		
 	
 	$img: null, 		// container for the canvas data-url
-	canvas: null, 		// off-screen canvas for rendering
+	canvas: null, 		// <canvas> for rendering
+	svg: null,			// <svg> for rendering
 	context: null,		// 2D Drawing context
 	
 	needsRender: false,	// view invalidation: set to true to re-draw
@@ -157,15 +158,22 @@ BuzzdashViz.prototype = {
 				$ref.measure();
 				
 				if($ref.stage.prevwidth !== $ref.stage.width || $ref.stage.prevheight !== $ref.stage.height) {
-					$ref.$img.attr("width", $ref.stage.width/$ref.options.pixelRatio);
-					$ref.$img.attr("height", $ref.stage.height/$ref.options.pixelRatio);
-					
-					$($ref.canvas).attr("width", $ref.stage.width/$ref.options.pixelRatio);
-					$($ref.canvas).attr("height", $ref.stage.height/$ref.options.pixelRatio);
-					
-					$ref.stage.playhead = 0;					
-					$ref.needsRender = true;
+					if($ref.options.svg) {
+						$($ref.svg).attr("width", $ref.stage.width/$ref.options.pixelRatio);
+						$($ref.svg).attr("height", $ref.stage.height/$ref.options.pixelRatio);
+						
+						$($ref.svg).empty();
+					} else {
+						$ref.$img.attr("width", $ref.stage.width/$ref.options.pixelRatio);
+						$ref.$img.attr("height", $ref.stage.height/$ref.options.pixelRatio);
+						
+						$($ref.canvas).attr("width", $ref.stage.width/$ref.options.pixelRatio);
+						$($ref.canvas).attr("height", $ref.stage.height/$ref.options.pixelRatio);
+					}
 				}
+				
+				$ref.stage.playhead = 0;					
+				$ref.needsRender = true;
 			});
 		}
 		this.measure();
@@ -233,7 +241,67 @@ BuzzdashViz.prototype = {
 	
 	// specialized drawing code for <svg>
 	renderSVG: function(views, shares, numbars, scale, barwidth, bargap) {
-		// TODO
+		var $ref = this,
+			stage = this.stage,
+			options = this.options;
+			
+		for(var i = 0; i < views.length; i++) {
+			
+			var view = views[i],
+				share = shares[i],
+				svg_view,
+				svg_share;
+			
+			if(view == undefined) {
+				break;
+			}
+			
+			if(options.animated) {
+				view.anim = share.anim = Math.min(Math.ceil(options.animationDuration/numbars), Math.max(0, stage.playhead - i)); 
+			} else {
+				view.anim = share.anim = Math.max(1, Math.ceil(options.animationDuration/numbars));
+			}
+			
+			if(view.svg_el == null) {
+				// create svg elements
+				svg_view = $(document.createElementNS("http://www.w3.org/2000/svg", "rect"));  
+				svg_share = $(document.createElementNS("http://www.w3.org/2000/svg", "rect"));
+				
+				svg_view.attr({ fill: stage.views_color });
+				svg_share.attr({ fill: stage.shares_color });
+				
+				view.svg_el = svg_view;
+				share.svg_el = svg_share;
+								
+				$($ref.svg).append(svg_view);
+				$($ref.svg).append(svg_share);
+			}
+			
+			if(view.svg_el !== null) {
+				svg_view = view.svg_el,
+				svg_share = share.svg_el;
+				
+				var view_height = Math.max(Math.round(view.count*scale), 1) * (view.anim / Math.ceil(options.animationDuration/numbars)),
+					share_height = Math.max(Math.round(share.count*scale), 1) * (share.anim / Math.ceil(options.animationDuration/numbars)),
+					xoffset = i * (barwidth + bargap) + stage.marginw,
+					yoffset_views = Math.round(((stage.height)/2) - view_height + stage.marginh/2),
+					yoffset_shares = Math.round(((stage.height)/2) + bargap + stage.marginh/2);
+					
+				svg_view.attr({
+								"x" : xoffset,
+								"y" : yoffset_views,
+								"width" : barwidth,
+								"height" : view_height
+							  });
+							  
+				svg_share.attr({
+								"x" : xoffset,
+								"y" : yoffset_shares,
+								"width" : barwidth,
+								"height" : share_height
+							  });			
+			}
+		}
 	},
 	
 	// specialized drawing code for <canvas>
@@ -275,7 +343,11 @@ BuzzdashViz.prototype = {
 			
 			if(stage.playhead == options.animationDuration) {
 				this.needsRender = false;
+			}else {
+				this.needsRender = true;
 			}
+		} else {
+			this.needsRender = false;
 		}
 	},
 	
@@ -315,11 +387,13 @@ BuzzdashViz.prototype = {
 					views.push({
 						count: !isNaN(timeline.num_views)? Math.max(timeline.num_views, 0) : 0,
 						anim: 0,
+						svg_el: null,
 						date: timeline.date
 					});
 					shares.push({
 						count: !isNaN(timeline.num_shares)? Math.max(timeline.num_shares, 0) : 0,
 						anim: 0,
+						svg_el: null,
 						date: timeline.date
 					});
 				} else {
@@ -347,15 +421,21 @@ BuzzdashViz.prototype = {
 	createMarkup: function($el) {
 		$el.empty();
 		
-		this.canvas = $('<canvas/>', { Width: this.stage.width, Height: this.stage.height})[0];
-		this.$img = $('<img />', {Width: this.stage.width / this.options.pixelRatio, Height: this.stage.height/this.options.pixelRatio});
-		
-		this.context = this.canvas.getContext('2d');
-				
-		if(this.options.cansave){		
-			$el.append(this.$img);
+		if(this.options.svg) {
+			this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width, Height: this.stage.height, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
+			
+			$el.append(this.svg);
 		} else {
-			$el.append(this.canvas);
+			this.canvas = $('<canvas/>', { Width: this.stage.width, Height: this.stage.height})[0];
+			this.$img = $('<img />', {Width: this.stage.width / this.options.pixelRatio, Height: this.stage.height/this.options.pixelRatio});
+			
+			this.context = this.canvas.getContext('2d');
+					
+			if(this.options.cansave){		
+				$el.append(this.$img);
+			} else {
+				$el.append(this.canvas);
+			}
 		}
 	},
 	
