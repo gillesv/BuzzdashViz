@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>BuzzdashViz.js</title>
+	
+	<style>
+		html, body {
+			height: 100%;
+			overflow: hidden;
+		}
+	
+		.buzzdashviz {
+			position: absolute;
+			width: 90%;
+			height: 90%;
+			top: 5%;
+			left: 5%;
+			background: #352137;
+			z-index: 100;
+			
+			-webkit-box-shadow: 0 15px 15px rgba(0, 0, 0, .34);
+		}
+	</style>
+</head>
+<body>
+
+
+	<div class="buzzdashviz" data-campaign-id="13" data-animated="true" data-animation-duration="200" data-resizable="true" data-can-save="false">
+		<noscript>Javascript goes here</noscript>
+	</div>
+
+	
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="assets/js/BuzzdashAPI.js"></script>
+	<script src="assets/js/BuzzdashViz.js"></script>
+	
+	<script>
+		//<![CDATA[
+				
+		$(document).ready(function() {
+			$('.buzzdashviz').each(function(i) {
+				
+				var options = {
+					animated: true,
+					campaignID: 13,	// 13 = TNT
+					animationDuration: 200					
+				};
+							
+				var viz = new BuzzdashViz($(this));
+			});
+		});
+		
+		//]]>
+	</script>
+
+</body>
+</html>
