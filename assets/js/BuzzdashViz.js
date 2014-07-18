@@ -396,6 +396,10 @@ BuzzdashViz.prototype = {
 			
 			data_per_bar = Math.round(data.timeline.length / numbars);
 			
+			if(data_per_bar == 0) {
+				data_per_bar = 1;
+			}
+			
 			// combine 
 			for(var i = 0; i < data.timeline.length; i++) {
 				timeline = data.timeline[i];
