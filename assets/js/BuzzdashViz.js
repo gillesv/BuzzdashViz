@@ -6,6 +6,8 @@
  *	Feature roadmap:
  *
  *	- v1.1 - retina testing
+ *  - v1.1.1 - added SVG mode
+ *  - v1.1.2 - added ability to crop time-slice... ladies.
  *	- v1.2 - additional media-queries & sizes
  *	- v2.0 - interactivity: hover on bars to see actual numbers
  */
@@ -17,6 +19,8 @@ function BuzzdashViz($el, options) {
 }
 
 BuzzdashViz.prototype = {
+	
+	DEBUG: true,		// toggles logs
 	
 	api: null,			// reference to the BuzzdashAPI
 	
@@ -475,7 +479,89 @@ BuzzdashViz.prototype = {
 	campaignLoaded: function (data) {	// JSON is loaded from API
 		this.data = data;
 		
+		if(this.DEBUG) {
+			console.log("campaignLoaded");
+			console.log(data);
+		}
+		
+		if(this.options.startDate !== null || this.options.endDate !== null) {
+			var timeline = this.data.timeline.concat(), // make a copy of the timeline
+				filtered_timeline = [],
+				item,
+				startDate = this.options.startDate, 
+				endDate = this.options.endDate,
+				i = 0;	
+			
+			
+			if(startDate !== null && endDate !== null) {
+				if(this.DEBUG) {
+					console.log("Filtering. Start date: " + startDate + " / End date: " + endDate);
+				}
+			
+				for(i = 0; i < timeline.length; i++) {
+					item = timeline[i];
+					
+					if( this.compareDateStrings(item.date, startDate) == startDate && 
+						this.compareDateStrings(item.date, endDate) == item.date) {
+						filtered_timeline.push(item);	
+					}
+				}
+			} else if(startDate !== null) {
+				if(this.DEBUG) {
+					console.log("Filtering. Start date: " + startDate);
+				}
+			
+				for(i = 0; i < timeline.length; i++) {
+					item = timeline[i];
+					
+					if( this.compareDateStrings(item.date, startDate) == startDate) {
+						filtered_timeline.push(item);	
+					}
+				}
+			} else if(endDate !== null) {
+				if(this.DEBUG) {
+					console.log("Filtering. End date: " + endDate);
+				}
+			
+				for(i = 0; i < timeline.length; i++) {
+					item = timeline[i];
+					
+					if( this.compareDateStrings(item.date, endDate) == item.date) {
+						filtered_timeline.push(item);	
+					}
+				}
+			}
+			
+			this.data.timeline = filtered_timeline;
+			
+			if(this.DEBUG) {
+				console.log("campaign data filtered");
+				console.log(this.data.timeline);
+			}
+		}
+		
+				
 		this.needsRender = true;
+	},
+	
+	compareDateStrings: function (date1, date2) {
+		var date = date1,
+			components1 = date1.split('-'),
+			components2 = date2.split('-');
+		
+		if(components1.length !== components2.length) {
+			return null;
+		}
+		
+		for(var i = 0; i < components1.length; i++) {
+			if(parseInt(components1[i].toString()) >  parseInt(components2[i].toString())){
+				date = date2;
+				break;
+			}
+		}		
+		
+		// return the earlier date
+		return date;
 	},
 	
 	random: function(min, max) {	// random number helper method
