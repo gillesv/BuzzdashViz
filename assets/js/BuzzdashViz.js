@@ -51,6 +51,8 @@ BuzzdashViz.prototype = {
 		shares: [],		// shares-bars model
 		playhead: 0,	// for keeping track of the animation state
 		
+		scale: 1,
+		
 		width: 0,
 		height: 0,
 		prevwidth: -1,
@@ -225,12 +227,14 @@ BuzzdashViz.prototype = {
 		bargap = mq.bargap * options.pixelRatio;
 				
 		// scale
-		scale = (((stage.height - 10)/2) / data.max_views)/2;
+		//((stage.height) / (data.max_views + data.max_shares)); //(((stage.height - 10)/2) / data.max_views)/2;
 		
 		// normalisation of data & margins calculations
 		if(views.length == 0 && mq != null){
 			this.normalizeData();
 		}
+		
+		scale = this.stage.scale;
 		
 		// draw bargraphs		
 		if(options.svg) {
@@ -288,12 +292,14 @@ BuzzdashViz.prototype = {
 			if(view.svg_el !== null) {
 				svg_view = view.svg_el,
 				svg_share = share.svg_el;
-				
-				var view_height = Math.max(Math.round(view.count*scale), 1) * (view.anim / Math.ceil(options.animationDuration/numbars)),
-					share_height = Math.max(Math.round(share.count*scale), 1) * (share.anim / Math.ceil(options.animationDuration/numbars)),
+								
+				var anim_progress_view = view.anim / Math.ceil(options.animationDuration/numbars),
+					anim_progress_share = share.anim / Math.ceil(options.animationDuration/numbars),
+					view_height = Math.max(1, view.count*scale) * anim_progress_view,
+					share_height = Math.max(1, share.count*scale) * anim_progress_share,
 					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.round(((stage.height)/2) - view_height + stage.marginh/2),
-					yoffset_shares = Math.round(((stage.height)/2) + bargap + stage.marginh/2);
+					yoffset_views = Math.round(($ref.data.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
+					yoffset_shares = Math.round($ref.data.max_views*scale) + bargap + stage.marginh;
 					
 				svg_view.attr({
 								"x" : xoffset,
@@ -314,7 +320,8 @@ BuzzdashViz.prototype = {
 	
 	// specialized drawing code for <canvas>
 	renderCanvas: function(ctx, views, shares, numbars, scale, barwidth, bargap) {
-		var stage = this.stage,
+		var $ref = this,
+			stage = this.stage,
 			options = this.options;
 	
 		ctx.clearRect(0, 0, stage.width, stage.height);
@@ -329,12 +336,14 @@ BuzzdashViz.prototype = {
 				} else {
 					view.anim = share.anim = Math.max(1, Math.ceil(options.animationDuration/numbars));
 				}
-			
-				var view_height = Math.max(Math.round(view.count*scale), 1) * (view.anim / Math.ceil(options.animationDuration/numbars)),
-					share_height = Math.max(Math.round(share.count*scale), 1) * (share.anim / Math.ceil(options.animationDuration/numbars)),
+											
+				var anim_progress_view = view.anim / Math.ceil(options.animationDuration/numbars),
+					anim_progress_share = share.anim / Math.ceil(options.animationDuration/numbars),
+					view_height = Math.max(1, view.count*scale) * anim_progress_view,
+					share_height = Math.max(1, share.count*scale) * anim_progress_share,
 					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.round(((stage.height)/2) - view_height + stage.marginh/2),
-					yoffset_shares = Math.round(((stage.height)/2) + bargap + stage.marginh/2);
+					yoffset_views = Math.round(($ref.data.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
+					yoffset_shares = Math.round($ref.data.max_views*scale) + bargap + stage.marginh;
 					
 				ctx.fillStyle = stage.views_color;
 				ctx.fillRect(xoffset, yoffset_views, barwidth, view_height);
@@ -359,7 +368,7 @@ BuzzdashViz.prototype = {
 		}
 	},
 	
-	// generate optimized data & calculate margins
+	// generate optimized data & calculate margins & returns scale
 	normalizeData: function() {
 		// local vars
 		var $ref = this,
@@ -374,7 +383,7 @@ BuzzdashViz.prototype = {
 			bargap,
 			max_views = 0,
 			max_shares = 0,
-			scale = (((stage.height - 10)/2) / data.max_views)/2;
+			scale;
 			
 		numbars = mq.numbars;
 		barwidth = mq.barwidth * options.pixelRatio;
@@ -420,10 +429,14 @@ BuzzdashViz.prototype = {
 				counter ++;
 			}
 			
+			scale = ((stage.height) / (max_views + max_shares))
+			
 			// margins
 			stage.marginw = (stage.width - (views.length * (barwidth + bargap)))/2;
-			stage.marginh = (stage.height - ((max_views + max_shares)*scale + bargap))/2;
+			stage.marginh = (stage.height - ((max_views + max_shares)*scale + bargap));
 		}
+		
+		stage.scale = scale;
 	},
 	
 	createMarkup: function($el) {
