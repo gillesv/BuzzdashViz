@@ -49,6 +49,10 @@ BuzzdashViz.prototype = {
 		
 		views: [],		// views-bars model
 		shares: [],		// shares-bars model
+		
+		max_views: 0,	// based on normalized data, not actual data
+		max_shares: 0,
+		
 		playhead: 0,	// for keeping track of the animation state
 		
 		scale: 1,
@@ -226,8 +230,6 @@ BuzzdashViz.prototype = {
 		barwidth = mq.barwidth * options.pixelRatio;
 		bargap = mq.bargap * options.pixelRatio;
 				
-		// scale
-		//((stage.height) / (data.max_views + data.max_shares)); //(((stage.height - 10)/2) / data.max_views)/2;
 		
 		// normalisation of data & margins calculations
 		if(views.length == 0 && mq != null){
@@ -298,8 +300,8 @@ BuzzdashViz.prototype = {
 					view_height = Math.max(1, view.count*scale) * anim_progress_view,
 					share_height = Math.max(1, share.count*scale) * anim_progress_share,
 					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.round(($ref.data.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
-					yoffset_shares = Math.round($ref.data.max_views*scale) + bargap + stage.marginh;
+					yoffset_views = Math.round((stage.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
+					yoffset_shares = Math.round(stage.max_views*scale) + bargap + stage.marginh;
 					
 				svg_view.attr({
 								"x" : xoffset,
@@ -342,8 +344,8 @@ BuzzdashViz.prototype = {
 					view_height = Math.max(1, view.count*scale) * anim_progress_view,
 					share_height = Math.max(1, share.count*scale) * anim_progress_share,
 					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.round(($ref.data.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
-					yoffset_shares = Math.round($ref.data.max_views*scale) + bargap + stage.marginh;
+					yoffset_views = Math.min(stage.height/2, Math.round(($ref.data.max_views - view.count*anim_progress_view)*scale)) + stage.marginh,
+					yoffset_shares = Math.min(stage.height/2, Math.round($ref.data.max_views*scale)) + bargap + stage.marginh;
 					
 				ctx.fillStyle = stage.views_color;
 				ctx.fillRect(xoffset, yoffset_views, barwidth, view_height);
@@ -433,11 +435,24 @@ BuzzdashViz.prototype = {
 				counter ++;
 			}
 			
-			scale = ((stage.height) / (max_views + max_shares))
+			scale = ((stage.height) / (max_views + max_shares));
+			stage.max_views = max_views;
+			stage.max_shares = max_shares;
 			
 			// margins
 			stage.marginw = (stage.width - (views.length * (barwidth + bargap)))/2;
 			stage.marginh = (stage.height - ((max_views + max_shares)*scale + bargap));
+		}
+		
+		if(this.DEBUG) {
+			console.log("Data Normalized:");
+			console.log(this.stage.views);
+			console.log(this.stage.shares);
+			
+			console.log("Max views&shares:");
+			console.log(max_views + " " + max_shares);
+			console.log("versus:");
+			console.log(data.max_views + " " + data.max_shares);
 		}
 		
 		stage.scale = scale;
