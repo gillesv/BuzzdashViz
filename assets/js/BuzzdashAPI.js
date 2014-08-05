@@ -2,10 +2,7 @@ function BuzzdashAPI() {
 	this.campaignLoaded = function(data){};
 }
 
-BuzzdashAPI.prototype.loadCampaign = function(campaignID) {
-
-	
-	
+BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
 	var blog_date_date = Array();
 	var blog_total_mentions = Array();
 	var blog_date_date = Array();
@@ -204,7 +201,9 @@ BuzzdashAPI.prototype.loadCampaign = function(campaignID) {
 	returnData["campaign"] = data.campaign;
 	
 	returnData["timeline"] = maindata;
-  	sources["this"].campaignLoaded(returnData);
+  	//sources["this"].campaignLoaded(returnData);
+  	  	
+  	callback.call(null, returnData);
   
   
 	

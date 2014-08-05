@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script>
+		function JavascriptClass() {
+			this.init();
+		}
+		
+		JavascriptClass.prototype = {
+			id: Math.round(Math.random()*100),
+			
+			init: function() {
+				
+			}
+		};
+		
+		for(var i = 0; i < 10; i++) {
+			var instance = new JavascriptClass();
+			console.log(instance.id);
+		}
+	</script>
+	
+</body>
+</html>

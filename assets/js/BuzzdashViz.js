@@ -12,15 +12,16 @@
  *	- v2.0 - interactivity: hover on bars to see actual numbers
  */
 
-function BuzzdashViz($el, options) {
-	this.$el = $el;
+var BuzzdashVizInstances = [];
+
+function BuzzdashViz(el, api, options) {
+	BuzzdashVizInstances.push(this.setup(el, api, options));
 	
-	this.setup(options);
+	return this;
 }
 
 BuzzdashViz.prototype = {
-	
-	DEBUG: true,		// toggles logs
+	DEBUG: false,		// toggles logs
 	
 	api: null,			// reference to the BuzzdashAPI
 	
@@ -104,61 +105,71 @@ BuzzdashViz.prototype = {
 		shares_color: '#ffffff'
 	},
 	
-	setup: function (options) {		// setup/constructor method
+	setup: function (el, api, options) {		// setup/constructor method
 		var $ref = this;
 		
-		this.api = new BuzzdashAPI();
+		$ref.$el = $(el);
+		
+		this.api = api;
 		
 		if(window.devicePixelRatio !== undefined) {
 			this.options.pixelRatio = window.devicePixelRatio;
 		}
 		
 		if(options != null) {
-			$.extend(this.options, options);
+			$.extend($ref.options, options);
 		} else {
 			var dataOptions = {};
-		
+						
 			if($ref.$el.data("animation-duration") !== undefined) {
-				dataOptions["animationDuration"] = $ref.$el.data("animation-duration");
+				// dataOptions["animationDuration"] = $ref.$el.data("animation-duration");
+				$ref.options.animationDuration = $ref.$el.data("animation-duration");
 			} 
 			
 			if($ref.$el.data("campaign-id") !== undefined) {
-				dataOptions["campaignID"] = $ref.$el.data("campaign-id");
+				// dataOptions["campaignID"] = $ref.$el.data("campaign-id");
+				$ref.options.campaignID = $ref.$el.data("campaign-id");
 			} 
 			
 			if($ref.$el.data("animated") !== undefined) {
-				dataOptions["animated"] = $ref.$el.data("animated");
+				// dataOptions["animated"] = $ref.$el.data("animated");
+				$ref.options.animated = $ref.$el.data("animated");
 			}
 			
 			if($ref.$el.data("resizable") !== undefined) {
-				dataOptions["resizable"] = $ref.$el.data("resizable");
+				// dataOptions["resizable"] = $ref.$el.data("resizable");
+				$ref.options.resizable = $ref.$el.data("resizable");
 			}
 			
 			if($ref.$el.data("can-save") !== undefined) {
-				dataOptions["cansave"] = $ref.$el.data("can-save");
+				// dataOptions["cansave"] = $ref.$el.data("can-save");
+				$ref.options.cansave = $ref.$el.data("can-save");
 			}
 			
 			if($ref.$el.data("pixel-ratio") !== undefined) {
-				dataOptions["pixelRatio"] = $ref.$el.data("pixel-ratio");
+				// dataOptions["pixelRatio"] = $ref.$el.data("pixel-ratio");
+				$ref.options.pixelRatio = $ref.$el.data("pixel-ratio");
 			}
 			
 			if($ref.$el.data("svg") !== undefined) {
-				dataOptions["svg"] = $ref.$el.data("svg");
+				// dataOptions["svg"] = $ref.$el.data("svg");
+				$ref.options.svg = $ref.$el.data("svg");
 			}
 			
 			if($ref.$el.data("start-date") !== undefined) {
-				dataOptions["startDate"] = $ref.$el.data("start-date");
+				// dataOptions["startDate"] = $ref.$el.data("start-date");
+				$ref.options.startDate = $ref.$el.data("start-date");
 			}
 			
 			if($ref.$el.data("end-date") !== undefined) {
-				dataOptions["endDate"] = $ref.$el.data("end-date");
+				// dataOptions["endDate"] = $ref.$el.data("end-date");
+				$ref.options.endDate = $ref.$el.data("end-date");
 			}
-			
-			$.extend(this.options, dataOptions);
+			//$.extend($ref.options, dataOptions);
 		}
 				
-		if(this.options.svg) {
-			this.options.pixelRatio = 1;
+		if($ref.options.svg) {
+			$ref.options.pixelRatio = 1;
 		}
 				
 		if(this.options.campaignID == null || this.options.campaignID == undefined) {
@@ -166,59 +177,51 @@ BuzzdashViz.prototype = {
 			
 			return;
 		}
-				
-		if(this.options.resizable) {
-			$(window).resize(function() {
-				$ref.measure();
-				
-				if($ref.stage.prevwidth !== $ref.stage.width || $ref.stage.prevheight !== $ref.stage.height) {
-					if($ref.options.svg) {
-						$($ref.svg).attr("width", $ref.stage.width/$ref.options.pixelRatio);
-						$($ref.svg).attr("height", $ref.stage.height/$ref.options.pixelRatio);
-						
-						$($ref.svg).empty();
-					} else {
-						$ref.$img.attr("width", $ref.stage.width/$ref.options.pixelRatio);
-						$ref.$img.attr("height", $ref.stage.height/$ref.options.pixelRatio);
-						
-						$($ref.canvas).attr("width", $ref.stage.width/$ref.options.pixelRatio);
-						$($ref.canvas).attr("height", $ref.stage.height/$ref.options.pixelRatio);
-					}
-				}
-				
-				$ref.stage.playhead = 0;					
-				$ref.needsRender = true;
-			});
-		}
+		
 		this.measure();
 		
 		this.createMarkup(this.$el);
 		
 		// get data
-		this.api.campaignLoaded = function(data) {
-			$ref.campaignLoaded(data);	
-		};
-		this.api.loadCampaign(this.options.campaignID);
+		$ref.api.loadCampaign(this.options.campaignID, function(data){
+			$ref.campaignLoaded(data);
+		});
 		
-		// requestanimationframe - setup render loops		
-		(function animLoop() {
-			requestAnimationFrame(animLoop);
-			if($ref.needsRender) {
-				$ref.render();
+		return this;
+	},
+	
+	resize: function () {	
+		this.measure();
+				
+		if(this.stage.prevwidth !== this.stage.width || this.stage.prevheight !== this.stage.height) {
+			if(this.options.svg) {
+				$(this.svg).attr("width",  this.stage.width  / this.options.pixelRatio);
+				$(this.svg).attr("height", this.stage.height / this.options.pixelRatio);
+				
+				$(this.svg).empty();
+			} else {
+				this.$img.attr("width",  this.stage.width  / this.options.pixelRatio);
+				this.$img.attr("height", this.stage.height / this.options.pixelRatio);
+				
+				$(this.canvas).attr("width",  this.stage.width  / this.options.pixelRatio);
+				$(this.canvas).attr("height", this.stage.height / this.options.pixelRatio);
 			}
-		})();
+		}
+		
+		this.stage.playhead = 0;					
+		this.needsRender = true;
 	},
 	
 	render: function() {
 		// local vars
 		var $ref = this,
-			stage = this.stage,
-			data = this.data,
-			options = this.options,
-			ctx = this.context,
-			views = this.stage.views,
-			shares = this.stage.shares,
-			mq = this.stage.media[stage.selectedmedia],
+			stage = $ref.stage,
+			data = $ref.data,
+			options = $ref.options,
+			ctx = $ref.context,
+			views = $ref.stage.views,
+			shares = $ref.stage.shares,
+			mq = $ref.stage.media[stage.selectedmedia],
 			
 			numbars,
 			barwidth,
@@ -233,16 +236,16 @@ BuzzdashViz.prototype = {
 		
 		// normalisation of data & margins calculations
 		if(views.length == 0 && mq != null){
-			this.normalizeData();
+			$ref.normalizeData();
 		}
 		
-		scale = this.stage.scale;
+		scale = $ref.stage.scale;
 		
 		// draw bargraphs		
-		if(options.svg) {
-			this.renderSVG(views, shares, numbars, scale, barwidth, bargap);
+		if($ref.options.svg) {
+			$ref.renderSVG(views, shares, numbars, scale, barwidth, bargap);
 		} else {
-			this.renderCanvas(ctx, views, shares, numbars, scale, barwidth, bargap);
+			$ref.renderCanvas(ctx, views, shares, numbars, scale, barwidth, bargap);
 		}
 		
 		// advance playhead
@@ -286,7 +289,7 @@ BuzzdashViz.prototype = {
 				
 				view.svg_el = svg_view;
 				share.svg_el = svg_share;
-								
+				
 				$($ref.svg).append(svg_view);
 				$($ref.svg).append(svg_share);
 			}
@@ -344,8 +347,8 @@ BuzzdashViz.prototype = {
 					view_height = Math.max(1, view.count*scale) * anim_progress_view,
 					share_height = Math.max(1, share.count*scale) * anim_progress_share,
 					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.min(stage.height/2, Math.round(($ref.data.max_views - view.count*anim_progress_view)*scale)) + stage.marginh,
-					yoffset_shares = Math.min(stage.height/2, Math.round($ref.data.max_views*scale)) + bargap + stage.marginh;
+					yoffset_views = Math.round((stage.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
+					yoffset_shares = Math.round(stage.max_views*scale) + bargap + stage.marginh;
 					
 				ctx.fillStyle = stage.views_color;
 				ctx.fillRect(xoffset, yoffset_views, barwidth, view_height);
@@ -464,7 +467,9 @@ BuzzdashViz.prototype = {
 		if(this.options.svg) {
 			this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width/ this.options.pixelRatio, Height: this.stage.height/ this.options.pixelRatio, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
 			
-			$el.append(this.svg);
+			this.svg.setAttribute("id", Math.round(Math.random()*100).toString());
+			
+			$el.append(this.svg);			
 		} else {
 			this.canvas = $('<canvas/>', { Width: this.stage.width, Height: this.stage.height})[0];
 			this.$img = $('<img />', {Width: this.stage.width / this.options.pixelRatio, Height: this.stage.height/this.options.pixelRatio});
@@ -479,7 +484,7 @@ BuzzdashViz.prototype = {
 		}
 	},
 	
-	measure: function () {	
+	measure: function () {
 		if(this.$el) {
 			this.stage.prevwidth = this.stage.width;
 			this.stage.prevheight = this.stage.height;
@@ -514,6 +519,7 @@ BuzzdashViz.prototype = {
 		if(this.DEBUG) {
 			console.log("campaignLoaded");
 			console.log(data);
+			console.log(this);
 		}
 		
 		if(this.options.startDate !== null || this.options.endDate !== null) {
@@ -639,3 +645,23 @@ BuzzdashViz.prototype = {
             clearTimeout(id);
         };
 }());
+
+(function animLoop() {
+	requestAnimationFrame(animLoop);
+		
+	for(var i = 0; i < BuzzdashVizInstances.length; i++) {
+		if(BuzzdashVizInstances[i].needsRender) {
+			BuzzdashVizInstances[i].render();
+		}
+	}
+})();
+
+$(document).ready(function(){
+	$(window).resize(function(evt){
+		for(var i = 0; i < BuzzdashVizInstances.length; i++) {
+			if(BuzzdashVizInstances[i].options.resizable) {
+				BuzzdashVizInstances[i].resize();
+			}
+		}
+	});
+});
