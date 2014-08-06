@@ -15,7 +15,9 @@
 var BuzzdashVizInstances = [];
 
 function BuzzdashViz(el, api, options) {
-	BuzzdashVizInstances.push(this.setup(el, api, options));
+	this.setup(el, api, options);
+	
+	BuzzdashVizInstances.push(this);
 	
 	return this;
 }
@@ -268,7 +270,7 @@ BuzzdashViz.prototype = {
 					xoffset = i * (barwidth + bargap) + stage.marginw,
 					yoffset_views = Math.round((stage.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
 					yoffset_shares = Math.round(stage.max_views*scale) + bargap + stage.marginh;
-					
+				
 				svg_view.attr({
 								"x" : xoffset,
 								"y" : yoffset_views,
@@ -399,6 +401,8 @@ BuzzdashViz.prototype = {
 	},
 	
 	measure: function () {
+		console.log("Measure: " + this.$el.attr("class"));
+		console.log(this);
 		if(this.$el) {
 			this.stage.prevwidth = this.stage.width;
 			this.stage.prevheight = this.stage.height;
@@ -564,7 +568,7 @@ BuzzdashViz.prototype = {
 	requestAnimationFrame(animLoop);
 		
 	for(var i = 0; i < BuzzdashVizInstances.length; i++) {
-		if(BuzzdashVizInstances[i].needsRender) {
+		if(BuzzdashVizInstances[i].needsRender && i == 0) {
 			BuzzdashVizInstances[i].render();
 		}
 	}
@@ -573,7 +577,7 @@ BuzzdashViz.prototype = {
 $(document).ready(function(){
 	$(window).resize(function(evt){
 		for(var i = 0; i < BuzzdashVizInstances.length; i++) {
-			if(BuzzdashVizInstances[i].options.resizable) {
+			if(BuzzdashVizInstances[i].options.resizable && i == 0) {
 				BuzzdashVizInstances[i].resize();
 			}
 		}
