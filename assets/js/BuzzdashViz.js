@@ -14,6 +14,72 @@
 
 var BuzzdashVizInstances = [];
 
+function BuzzdashStage() {
+	this.setup();
+}
+
+BuzzdashStage.prototype = {
+	setup: function() {
+		// constructor	
+	},
+
+	views: [],		// views-bars model
+	shares: [],		// shares-bars model
+	
+	max_views: 0,	// based on normalized data, not actual data
+	max_shares: 0,
+	
+	playhead: 0,	// for keeping track of the animation state
+	
+	scale: 1,
+	
+	width: 0,
+	height: 0,
+	prevwidth: -1,
+	prevheight: -1,
+	
+	marginw: 0,		// margins to center the chart on stage
+	marginh: 0,
+	
+	media: {	// "media queries" : different constants for different sizes
+		'small' :  {
+			minwidth: 0,
+			numbars: 10,
+			barwidth: 8,
+			bargap: 2
+		},
+		'medium' : {
+			minwidth: 200,
+			numbars: 20,
+			barwidth: 8,
+			bargap: 2
+		},
+		'large' : {
+			minwidth: 400,
+			numbars: 20,
+			barwidth: 16,
+			bargap: 4
+		},
+		'hueg' : {
+			minwidth: 800,
+			numbars: 32,
+			barwidth: 20,
+			bargap: 5
+		},
+		'potat0wned' : {
+			minwidth: 1200,
+			numbars: 42,
+			barwidth: 20,
+			bargap: 5
+		}
+	},
+	selectedmedia: 'small',	// active "media query"	id
+	prevmedia: null,		// previously active "media query" id
+	
+	views_color: '#ff5d3b',
+	shares_color: '#ffffff'
+};
+
 function BuzzdashViz(el, api, options) {
 	this.setup(el, api, options);
 	
@@ -44,70 +110,14 @@ BuzzdashViz.prototype = {
 	needsRender: false,	// view invalidation: set to true to re-draw
 	
 	data: null,			// JSON gotten from the BuzzdashAPI
-	stage: {			// stage for rendering	(logical nested objects)
-		
-		views: [],		// views-bars model
-		shares: [],		// shares-bars model
-		
-		max_views: 0,	// based on normalized data, not actual data
-		max_shares: 0,
-		
-		playhead: 0,	// for keeping track of the animation state
-		
-		scale: 1,
-		
-		width: 0,
-		height: 0,
-		prevwidth: -1,
-		prevheight: -1,
-		
-		marginw: 0,		// margins to center the chart on stage
-		marginh: 0,
-		
-		media: {	// "media queries" : different constants for different sizes
-			'small' :  {
-				minwidth: 0,
-				numbars: 10,
-				barwidth: 8,
-				bargap: 2
-			},
-			'medium' : {
-				minwidth: 200,
-				numbars: 20,
-				barwidth: 8,
-				bargap: 2
-			},
-			'large' : {
-				minwidth: 400,
-				numbars: 20,
-				barwidth: 16,
-				bargap: 4
-			},
-			'hueg' : {
-				minwidth: 800,
-				numbars: 32,
-				barwidth: 20,
-				bargap: 5
-			},
-			'potat0wned' : {
-				minwidth: 1200,
-				numbars: 42,
-				barwidth: 20,
-				bargap: 5
-			}
-		},
-		selectedmedia: 'small',	// active "media query"	id
-		prevmedia: null,		// previously active "media query" id
-		
-		views_color: '#ff5d3b',
-		shares_color: '#ffffff'
-	},
+	stage: null,		// stage for rendering	(logical nested objects)
 	
 	setup: function (el, api, options) {		// setup/constructor method
 		var $ref = this;
 		
 		$ref.$el = $(el);
 		
+		this.stage = new BuzzdashStage();
 		this.api = api;
 		
 		if(window.devicePixelRatio !== undefined) {
@@ -184,6 +194,36 @@ BuzzdashViz.prototype = {
 		this.stage.playhead = 0;					
 		this.needsRender = true;
 	},
+	
+	measure: function () {
+		if(this.$el) {
+			this.stage.prevwidth = this.stage.width;
+			this.stage.prevheight = this.stage.height;
+			
+			this.stage.width = this.$el.width() * this.options.pixelRatio;
+			this.stage.height = this.$el.height() * this.options.pixelRatio;
+			
+			if(this.stage.width != this.stage.prevwidth || this.stage.height != this.stage.prevheight) {
+				// store previous query
+				this.stage.prevmedia = this.stage.selectedmedia;
+								
+				// check which media query is active
+				for(var id in this.stage.media) {
+					var mq = this.stage.media[id];
+										
+					if (this.stage.width > mq.minwidth) {
+						this.stage.selectedmedia = id;
+					}
+				}
+				
+				// empty arrays -> this causes a re-calculation of the data-models
+				this.stage.views = [];
+				this.stage.shares = [];
+			}
+			
+		}
+	},
+
 	
 	render: function() {
 		// local vars
@@ -400,37 +440,6 @@ BuzzdashViz.prototype = {
 		$el.append(this.svg);			
 	},
 	
-	measure: function () {
-		console.log("Measure: " + this.$el.attr("class"));
-		console.log(this);
-		if(this.$el) {
-			this.stage.prevwidth = this.stage.width;
-			this.stage.prevheight = this.stage.height;
-			
-			this.stage.width = this.$el.width() * this.options.pixelRatio;
-			this.stage.height = this.$el.height() * this.options.pixelRatio;
-			
-			if(this.stage.width != this.stage.prevwidth || this.stage.height != this.stage.prevheight) {
-				// store previous query
-				this.stage.prevmedia = this.stage.selectedmedia;
-								
-				// check which media query is active
-				for(var id in this.stage.media) {
-					var mq = this.stage.media[id];
-										
-					if (this.stage.width > mq.minwidth) {
-						this.stage.selectedmedia = id;
-					}
-				}
-				
-				// empty arrays -> this causes a re-calculation of the data-models
-				this.stage.views = [];
-				this.stage.shares = [];
-			}
-			
-		}
-	},
-	
 	campaignLoaded: function (data) {	// JSON is loaded from API
 		this.data = data;
 		
@@ -568,7 +577,7 @@ BuzzdashViz.prototype = {
 	requestAnimationFrame(animLoop);
 		
 	for(var i = 0; i < BuzzdashVizInstances.length; i++) {
-		if(BuzzdashVizInstances[i].needsRender && i == 0) {
+		if(BuzzdashVizInstances[i].needsRender) {
 			BuzzdashVizInstances[i].render();
 		}
 	}
@@ -577,7 +586,7 @@ BuzzdashViz.prototype = {
 $(document).ready(function(){
 	$(window).resize(function(evt){
 		for(var i = 0; i < BuzzdashVizInstances.length; i++) {
-			if(BuzzdashVizInstances[i].options.resizable && i == 0) {
+			if(BuzzdashVizInstances[i].options.resizable) {
 				BuzzdashVizInstances[i].resize();
 			}
 		}
