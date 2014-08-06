@@ -548,28 +548,46 @@ BuzzdashStage.prototype = {
 			bargap: 2
 		},
 		'medium' : {
-			minwidth: 200,
+			minwidth: 319,
 			numbars: 20,
-			barwidth: 8,
-			bargap: 2
-		},
-		'large' : {
-			minwidth: 400,
-			numbars: 20,
-			barwidth: 16,
+			barwidth: 12,
 			bargap: 4
 		},
-		'hueg' : {
-			minwidth: 800,
-			numbars: 32,
+		'medium2' : {
+			minwidth: 480,
+			numbars: 24,
+			barwidth: 15,
+			bargap: 5
+		},
+		'medium3' : {
+			minwidth: 600,
+			numbars: 24,
 			barwidth: 20,
 			bargap: 5
 		},
-		'potat0wned' : {
-			minwidth: 1200,
-			numbars: 42,
-			barwidth: 20,
+		'large' : {
+			minwidth: 700,
+			numbars: 24,
+			barwidth: 24,
 			bargap: 5
+		},
+		'large2' : {
+			minwidth: 900,
+			numbars: 30,
+			barwidth: 25,
+			bargap: 5
+		},
+		'large3' : {
+			minwidth: 960,
+			numbars: 32,
+			barwidth: 25,
+			bargap: 5
+		},
+		'huge' : {
+			minwidth: 1019,
+			numbars: 32,
+			barwidth: 25,
+			bargap: 6
 		}
 	},
 	selectedmedia: 'small',	// active "media query"	id
