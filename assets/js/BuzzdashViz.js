@@ -8,82 +8,13 @@
  *	- v1.1 - retina testing
  *  - v1.1.1 - added SVG mode
  *  - v1.1.2 - added ability to crop time-slice... ladies.
+ *	- v1.1.3 - fixed a bug that prevented multiple instances of BuzzdashViz running on the same page, and removed <canvas> rendering, as it's slow, inefficient and has no better browser support than SVG does
  *	- v1.2 - additional media-queries & sizes
  *	- v2.0 - interactivity: hover on bars to see actual numbers
  */
 
-var BuzzdashVizInstances = [];
-
-function BuzzdashStage() {
-	this.setup();
-}
-
-BuzzdashStage.prototype = {
-	setup: function() {
-		// constructor	
-	},
-
-	views: [],		// views-bars model
-	shares: [],		// shares-bars model
-	
-	max_views: 0,	// based on normalized data, not actual data
-	max_shares: 0,
-	
-	playhead: 0,	// for keeping track of the animation state
-	
-	scale: 1,
-	
-	width: 0,
-	height: 0,
-	prevwidth: -1,
-	prevheight: -1,
-	
-	marginw: 0,		// margins to center the chart on stage
-	marginh: 0,
-	
-	media: {	// "media queries" : different constants for different sizes
-		'small' :  {
-			minwidth: 0,
-			numbars: 10,
-			barwidth: 8,
-			bargap: 2
-		},
-		'medium' : {
-			minwidth: 200,
-			numbars: 20,
-			barwidth: 8,
-			bargap: 2
-		},
-		'large' : {
-			minwidth: 400,
-			numbars: 20,
-			barwidth: 16,
-			bargap: 4
-		},
-		'hueg' : {
-			minwidth: 800,
-			numbars: 32,
-			barwidth: 20,
-			bargap: 5
-		},
-		'potat0wned' : {
-			minwidth: 1200,
-			numbars: 42,
-			barwidth: 20,
-			bargap: 5
-		}
-	},
-	selectedmedia: 'small',	// active "media query"	id
-	prevmedia: null,		// previously active "media query" id
-	
-	views_color: '#ff5d3b',
-	shares_color: '#ffffff'
-};
-
-function BuzzdashViz(el, api, options) {
-	this.setup(el, api, options);
-	
-	BuzzdashVizInstances.push(this);
+function BuzzdashViz(el, options) {
+	this.setup(el, options);
 	
 	return this;
 }
@@ -112,13 +43,13 @@ BuzzdashViz.prototype = {
 	data: null,			// JSON gotten from the BuzzdashAPI
 	stage: null,		// stage for rendering	(logical nested objects)
 	
-	setup: function (el, api, options) {		// setup/constructor method
+	setup: function (el, options) {		// setup/constructor method
 		var $ref = this;
 		
 		$ref.$el = $(el);
 		
 		this.stage = new BuzzdashStage();
-		this.api = api;
+		this.api = new BuzzdashAPI();
 		
 		if(window.devicePixelRatio !== undefined) {
 			this.options.pixelRatio = window.devicePixelRatio;
@@ -169,6 +100,11 @@ BuzzdashViz.prototype = {
 			return;
 		}
 		
+		$(window).resize(function(evt){
+			if($ref.options.resizable) {
+				$ref.resize();
+			}
+		});
 		this.measure();
 		
 		this.createMarkup(this.$el);
@@ -177,6 +113,14 @@ BuzzdashViz.prototype = {
 		$ref.api.loadCampaign(this.options.campaignID, function(data){
 			$ref.campaignLoaded(data);
 		});
+		
+		(function animLoop() {
+			requestAnimationFrame(animLoop);
+				
+			if($ref.needsRender) {
+				$ref.render();
+			}
+		})();
 		
 		return this;
 	},
@@ -573,22 +517,64 @@ BuzzdashViz.prototype = {
         };
 }());
 
-(function animLoop() {
-	requestAnimationFrame(animLoop);
-		
-	for(var i = 0; i < BuzzdashVizInstances.length; i++) {
-		if(BuzzdashVizInstances[i].needsRender) {
-			BuzzdashVizInstances[i].render();
-		}
-	}
-})();
+/** BuzzdashStage **/
+// keeps track of everything being drawn. Encapsulated inside of BuzzdashViz — Don't use by itself!
+function BuzzdashStage() {}
 
-$(document).ready(function(){
-	$(window).resize(function(evt){
-		for(var i = 0; i < BuzzdashVizInstances.length; i++) {
-			if(BuzzdashVizInstances[i].options.resizable) {
-				BuzzdashVizInstances[i].resize();
-			}
+BuzzdashStage.prototype = {
+	views: [],		// views-bars model
+	shares: [],		// shares-bars model
+	
+	max_views: 0,	// based on normalized data, not actual data
+	max_shares: 0,
+	
+	playhead: 0,	// for keeping track of the animation state
+	
+	scale: 1,
+	
+	width: 0,
+	height: 0,
+	prevwidth: -1,
+	prevheight: -1,
+	
+	marginw: 0,		// margins to center the chart on stage
+	marginh: 0,
+	
+	media: {	// "media queries" : different constants for different sizes
+		'small' :  {
+			minwidth: 0,
+			numbars: 10,
+			barwidth: 8,
+			bargap: 2
+		},
+		'medium' : {
+			minwidth: 200,
+			numbars: 20,
+			barwidth: 8,
+			bargap: 2
+		},
+		'large' : {
+			minwidth: 400,
+			numbars: 20,
+			barwidth: 16,
+			bargap: 4
+		},
+		'hueg' : {
+			minwidth: 800,
+			numbars: 32,
+			barwidth: 20,
+			bargap: 5
+		},
+		'potat0wned' : {
+			minwidth: 1200,
+			numbars: 42,
+			barwidth: 20,
+			bargap: 5
 		}
-	});
-});
+	},
+	selectedmedia: 'small',	// active "media query"	id
+	prevmedia: null,		// previously active "media query" id
+	
+	views_color: '#ff5d3b',
+	shares_color: '#ffffff'
+};
