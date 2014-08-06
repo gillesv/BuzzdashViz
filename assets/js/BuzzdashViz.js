@@ -122,50 +122,40 @@ BuzzdashViz.prototype = {
 			var dataOptions = {};
 						
 			if($ref.$el.data("animation-duration") !== undefined) {
-				// dataOptions["animationDuration"] = $ref.$el.data("animation-duration");
 				$ref.options.animationDuration = $ref.$el.data("animation-duration");
 			} 
 			
 			if($ref.$el.data("campaign-id") !== undefined) {
-				// dataOptions["campaignID"] = $ref.$el.data("campaign-id");
 				$ref.options.campaignID = $ref.$el.data("campaign-id");
 			} 
 			
 			if($ref.$el.data("animated") !== undefined) {
-				// dataOptions["animated"] = $ref.$el.data("animated");
 				$ref.options.animated = $ref.$el.data("animated");
 			}
 			
 			if($ref.$el.data("resizable") !== undefined) {
-				// dataOptions["resizable"] = $ref.$el.data("resizable");
 				$ref.options.resizable = $ref.$el.data("resizable");
 			}
 			
 			if($ref.$el.data("can-save") !== undefined) {
-				// dataOptions["cansave"] = $ref.$el.data("can-save");
 				$ref.options.cansave = $ref.$el.data("can-save");
 			}
 			
 			if($ref.$el.data("pixel-ratio") !== undefined) {
-				// dataOptions["pixelRatio"] = $ref.$el.data("pixel-ratio");
 				$ref.options.pixelRatio = $ref.$el.data("pixel-ratio");
 			}
 			
 			if($ref.$el.data("svg") !== undefined) {
-				// dataOptions["svg"] = $ref.$el.data("svg");
 				$ref.options.svg = $ref.$el.data("svg");
 			}
 			
 			if($ref.$el.data("start-date") !== undefined) {
-				// dataOptions["startDate"] = $ref.$el.data("start-date");
 				$ref.options.startDate = $ref.$el.data("start-date");
 			}
 			
 			if($ref.$el.data("end-date") !== undefined) {
-				// dataOptions["endDate"] = $ref.$el.data("end-date");
 				$ref.options.endDate = $ref.$el.data("end-date");
 			}
-			//$.extend($ref.options, dataOptions);
 		}
 				
 		if($ref.options.svg) {
@@ -448,7 +438,7 @@ BuzzdashViz.prototype = {
 		}
 		
 		if(this.DEBUG) {
-			console.log("Data Normalized:");
+			console.log("Data " +  + " Normalized:");
 			console.log(this.stage.views);
 			console.log(this.stage.shares);
 			
