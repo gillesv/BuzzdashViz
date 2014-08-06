@@ -32,14 +32,10 @@ BuzzdashViz.prototype = {
 		animationDuration: 60,	// duration in frames
 		pixelRatio: 1,			// for dealing with retina, hi-dpi, etc...
 		resizable: true,		// is this static or liquid?
-		cansave: true,			// can you right click>save on the visual? (toggles between attaching canvas & img)
-		svg: false,				// toggle between using SVG or canvas to render the chart
 		startDate: null,		// optional: datestring for the start of the to be visualised metrics
 		endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
 	},		
 	
-	$img: null, 		// container for the canvas data-url
-	canvas: null, 		// <canvas> for rendering
 	svg: null,			// <svg> for rendering
 	context: null,		// 2D Drawing context
 	
@@ -136,18 +132,11 @@ BuzzdashViz.prototype = {
 			if($ref.$el.data("resizable") !== undefined) {
 				$ref.options.resizable = $ref.$el.data("resizable");
 			}
-			
-			if($ref.$el.data("can-save") !== undefined) {
-				$ref.options.cansave = $ref.$el.data("can-save");
-			}
-			
+						
 			if($ref.$el.data("pixel-ratio") !== undefined) {
 				$ref.options.pixelRatio = $ref.$el.data("pixel-ratio");
 			}
 			
-			if($ref.$el.data("svg") !== undefined) {
-				$ref.options.svg = $ref.$el.data("svg");
-			}
 			
 			if($ref.$el.data("start-date") !== undefined) {
 				$ref.options.startDate = $ref.$el.data("start-date");
@@ -184,18 +173,10 @@ BuzzdashViz.prototype = {
 		this.measure();
 				
 		if(this.stage.prevwidth !== this.stage.width || this.stage.prevheight !== this.stage.height) {
-			if(this.options.svg) {
-				$(this.svg).attr("width",  this.stage.width  / this.options.pixelRatio);
-				$(this.svg).attr("height", this.stage.height / this.options.pixelRatio);
-				
-				$(this.svg).empty();
-			} else {
-				this.$img.attr("width",  this.stage.width  / this.options.pixelRatio);
-				this.$img.attr("height", this.stage.height / this.options.pixelRatio);
-				
-				$(this.canvas).attr("width",  this.stage.width  / this.options.pixelRatio);
-				$(this.canvas).attr("height", this.stage.height / this.options.pixelRatio);
-			}
+			$(this.svg).attr("width",  this.stage.width  / this.options.pixelRatio);
+			$(this.svg).attr("height", this.stage.height / this.options.pixelRatio);
+			
+			$(this.svg).empty();
 		}
 		
 		this.stage.playhead = 0;					
@@ -232,18 +213,10 @@ BuzzdashViz.prototype = {
 		scale = $ref.stage.scale;
 		
 		// draw bargraphs		
-		if($ref.options.svg) {
-			$ref.renderSVG(views, shares, numbars, scale, barwidth, bargap);
-		} else {
-			$ref.renderCanvas(ctx, views, shares, numbars, scale, barwidth, bargap);
-		}
+		$ref.renderSVG(views, shares, numbars, scale, barwidth, bargap);
 		
 		// advance playhead
 		$ref.advancePlayhead(options, stage);
-		
-		if(options.cansave) {
-			$ref.$img.attr('src', $ref.canvas.toDataURL());
-		}
 	},
 	
 	// specialized drawing code for <svg>
@@ -310,42 +283,6 @@ BuzzdashViz.prototype = {
 								"height" : share_height
 							  });			
 			}
-		}
-	},
-	
-	// specialized drawing code for <canvas>
-	renderCanvas: function(ctx, views, shares, numbars, scale, barwidth, bargap) {
-		var $ref = this,
-			stage = this.stage,
-			options = this.options;
-	
-		ctx.clearRect(0, 0, stage.width, stage.height);
-			
-		for(var i = 0; i < views.length; i++) {
-			var view = views[i], 
-				share = shares[i];
-						
-			if(view !== undefined) {
-				if(options.animated) {
-					view.anim = share.anim = Math.min(Math.ceil(options.animationDuration/numbars), Math.max(0, stage.playhead - i)); 
-				} else {
-					view.anim = share.anim = Math.max(1, Math.ceil(options.animationDuration/numbars));
-				}
-											
-				var anim_progress_view = view.anim / Math.ceil(options.animationDuration/numbars),
-					anim_progress_share = share.anim / Math.ceil(options.animationDuration/numbars),
-					view_height = Math.max(1, view.count*scale) * anim_progress_view,
-					share_height = Math.max(1, share.count*scale) * anim_progress_share,
-					xoffset = i * (barwidth + bargap) + stage.marginw,
-					yoffset_views = Math.round((stage.max_views - view.count*anim_progress_view)*scale) + stage.marginh,
-					yoffset_shares = Math.round(stage.max_views*scale) + bargap + stage.marginh;
-					
-				ctx.fillStyle = stage.views_color;
-				ctx.fillRect(xoffset, yoffset_views, barwidth, view_height);
-				
-				ctx.fillStyle = stage.shares_color;
-				ctx.fillRect(xoffset, yoffset_shares, barwidth, share_height);
-			} 
 		}
 	},
 	
@@ -454,24 +391,11 @@ BuzzdashViz.prototype = {
 	createMarkup: function($el) {
 		$el.empty();
 		
-		if(this.options.svg) {
-			this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width/ this.options.pixelRatio, Height: this.stage.height/ this.options.pixelRatio, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
-			
-			this.svg.setAttribute("id", Math.round(Math.random()*100).toString());
-			
-			$el.append(this.svg);			
-		} else {
-			this.canvas = $('<canvas/>', { Width: this.stage.width, Height: this.stage.height})[0];
-			this.$img = $('<img />', {Width: this.stage.width / this.options.pixelRatio, Height: this.stage.height/this.options.pixelRatio});
-			
-			this.context = this.canvas.getContext('2d');
-					
-			if(this.options.cansave){		
-				$el.append(this.$img);
-			} else {
-				$el.append(this.canvas);
-			}
-		}
+		this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width/ this.options.pixelRatio, Height: this.stage.height/ this.options.pixelRatio, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
+		
+		this.svg.setAttribute("id", Math.round(Math.random()*100).toString());
+		
+		$el.append(this.svg);			
 	},
 	
 	measure: function () {
