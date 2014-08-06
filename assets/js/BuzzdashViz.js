@@ -29,7 +29,6 @@ BuzzdashViz.prototype = {
 		campaignID: null,		// ID of the campaign-results to chart: get this value from inside Buzzdash
 		animated: true,			// is the chart animated?
 		animationDuration: 60,	// duration in frames
-		pixelRatio: 1,			// for dealing with retina, hi-dpi, etc...
 		resizable: true,		// is this static or liquid?
 		startDate: null,		// optional: datestring for the start of the to be visualised metrics
 		endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
@@ -50,10 +49,6 @@ BuzzdashViz.prototype = {
 		
 		this.stage = new BuzzdashStage();
 		this.api = new BuzzdashAPI();
-		
-		if(window.devicePixelRatio !== undefined) {
-			this.options.pixelRatio = window.devicePixelRatio;
-		}
 		
 		if(options != null) {
 			$.extend($ref.options, options);
@@ -76,11 +71,6 @@ BuzzdashViz.prototype = {
 				$ref.options.resizable = $ref.$el.data("resizable");
 			}
 						
-			if($ref.$el.data("pixel-ratio") !== undefined) {
-				$ref.options.pixelRatio = $ref.$el.data("pixel-ratio");
-			}
-			
-			
 			if($ref.$el.data("start-date") !== undefined) {
 				$ref.options.startDate = $ref.$el.data("start-date");
 			}
@@ -88,10 +78,6 @@ BuzzdashViz.prototype = {
 			if($ref.$el.data("end-date") !== undefined) {
 				$ref.options.endDate = $ref.$el.data("end-date");
 			}
-		}
-				
-		if($ref.options.svg) {
-			$ref.options.pixelRatio = 1;
 		}
 				
 		if(this.options.campaignID == null || this.options.campaignID == undefined) {
@@ -129,8 +115,8 @@ BuzzdashViz.prototype = {
 		this.measure();
 				
 		if(this.stage.prevwidth !== this.stage.width || this.stage.prevheight !== this.stage.height) {
-			$(this.svg).attr("width",  this.stage.width  / this.options.pixelRatio);
-			$(this.svg).attr("height", this.stage.height / this.options.pixelRatio);
+			$(this.svg).attr("width",  this.stage.width);
+			$(this.svg).attr("height", this.stage.height);
 			
 			$(this.svg).empty();
 		}
@@ -144,8 +130,8 @@ BuzzdashViz.prototype = {
 			this.stage.prevwidth = this.stage.width;
 			this.stage.prevheight = this.stage.height;
 			
-			this.stage.width = this.$el.width() * this.options.pixelRatio;
-			this.stage.height = this.$el.height() * this.options.pixelRatio;
+			this.stage.width = this.$el.width();
+			this.stage.height = this.$el.height();
 			
 			if(this.stage.width != this.stage.prevwidth || this.stage.height != this.stage.prevheight) {
 				// store previous query
@@ -187,8 +173,8 @@ BuzzdashViz.prototype = {
 			
 		
 		numbars = mq.numbars;
-		barwidth = mq.barwidth * options.pixelRatio;
-		bargap = mq.bargap * options.pixelRatio;
+		barwidth = mq.barwidth;
+		bargap = mq.bargap;
 				
 		
 		// normalisation of data & margins calculations
@@ -304,8 +290,8 @@ BuzzdashViz.prototype = {
 			scale;
 			
 		numbars = mq.numbars;
-		barwidth = mq.barwidth * options.pixelRatio;
-		bargap = mq.bargap * options.pixelRatio;
+		barwidth = mq.barwidth;
+		bargap = mq.bargap;
 			
 		if(views.length == 0 && mq != null) {
 			var timeline,
@@ -377,7 +363,7 @@ BuzzdashViz.prototype = {
 	createMarkup: function($el) {
 		$el.empty();
 		
-		this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width/ this.options.pixelRatio, Height: this.stage.height/ this.options.pixelRatio, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
+		this.svg = $(document.createElementNS("http://www.w3.org/2000/svg", "svg"), {Width: this.stage.width, Height: this.stage.height, xmlns:"http://www.w3.org/2000/svg", version: '1.1'})[0];
 		
 		this.svg.setAttribute("id", Math.round(Math.random()*100).toString());
 		
