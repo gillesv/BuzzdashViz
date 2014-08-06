@@ -98,6 +98,18 @@ BuzzdashViz.prototype = {
 		// get data
 		$ref.api.loadCampaign(this.options.campaignID, function(data){
 			$ref.campaignLoaded(data);
+			
+			// set textfield values
+			var $numviews = $("#dg-buzzchart-numviews"),
+				$numshares = $("#dg-buzzchart-numshares");
+			
+			if($numviews.length > 0){
+				$numviews.text(data['total_views'].toString());
+				$numshares.text(data['total_shares'].toString());
+				
+				$numviews.attr("id", null);
+				$numshares.attr("id", null);
+			}
 		});
 		
 		(function animLoop() {
