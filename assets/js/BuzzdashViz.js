@@ -22,14 +22,8 @@ BuzzdashViz.prototype = {
 	api: null,			// reference to the BuzzdashAPI
 	
 	$el: null,			// reference to container element (jquery)
-	options: {			// options read from the data-* properties
-		campaignID: null,		// ID of the campaign-results to chart: get this value from inside Buzzdash
-		animated: true,			// is the chart animated?
-		animationDuration: 200,	// duration in frames
-		resizable: true,		// is this static or liquid?
-		startDate: null,		// optional: datestring for the start of the to be visualised metrics
-		endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
-	},		
+	
+	options: null,		// options	
 	
 	svg: null,			// <svg> for rendering
 	context: null,		// 2D Drawing context
@@ -52,35 +46,50 @@ BuzzdashViz.prototype = {
 		
 		this.api = Buzzdash.api;
 		
+		// default options
+		this.options = {
+			campaignID: null,		// ID of the campaign-results to chart: get this value from inside Buzzdash
+			animated: true,			// is the chart animated?
+			animationDuration: 200,	// duration in frames
+			resizable: true,		// is this static or liquid?
+			startDate: null,		// optional: datestring for the start of the to be visualised metrics
+			endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
+		};
+		
+		// adding JSON options
 		if(options != null) {
 			$.extend($ref.options, options);
-		} else {
-			var dataOptions = {};
-						
-			if($ref.$el.data("animation-duration") !== undefined) {
-				$ref.options.animationDuration = $ref.$el.data("animation-duration");
-			} 
-			
-			if($ref.$el.data("campaign-id") !== undefined) {
-				$ref.options.campaignID = $ref.$el.data("campaign-id");
-			} 
-			
-			if($ref.$el.data("animated") !== undefined) {
-				$ref.options.animated = $ref.$el.data("animated");
-			}
-			
-			if($ref.$el.data("resizable") !== undefined) {
-				$ref.options.resizable = $ref.$el.data("resizable");
-			}
-						
-			if($ref.$el.data("start-date") !== undefined) {
-				$ref.options.startDate = $ref.$el.data("start-date");
-			}
-			
-			if($ref.$el.data("end-date") !== undefined) {
-				$ref.options.endDate = $ref.$el.data("end-date");
-			}
+		} 
+		
+		// adding data-options
+		var dataOptions = {};
+					
+		if($ref.$el.data("animation-duration") !== undefined) {
+			dataOptions.animationDuration = $ref.$el.data("animation-duration");
+		} 
+		
+		if($ref.$el.data("campaign-id") !== undefined) {
+			dataOptions.campaignID = $ref.$el.data("campaign-id");
+		} 
+		
+		if($ref.$el.data("animated") !== undefined) {
+			dataOptions.animated = $ref.$el.data("animated");
 		}
+		
+		if($ref.$el.data("resizable") !== undefined) {
+			dataOptions.resizable = $ref.$el.data("resizable");
+		}
+					
+		if($ref.$el.data("start-date") !== undefined) {
+			dataOptions.startDate = $ref.$el.data("start-date");
+		}
+		
+		if($ref.$el.data("end-date") !== undefined) {
+			dataOptions.endDate = $ref.$el.data("end-date");
+		}
+		
+		$.extend($ref.options, dataOptions);
+		
 				
 		if(this.options.campaignID == null || this.options.campaignID == undefined) {
 			alert("Error: can't graph results, no campaign ID was provided");
