@@ -3,13 +3,14 @@ function BuzzdashAPI() {
 }
 
 BuzzdashAPI.prototype = {
-	lastCampaignID: null,
-	callbacks: []
+	//lastCampaignID: null,
+	callbacks: {}
 };
 
 BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
+	/*
 	if(campaignID == this.lastCampaignID) {
-		this.callbacks.push(callback);
+		//this.callbacks.push(callback);
 	
 		return;
 	} else {
@@ -18,6 +19,15 @@ BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
 	}
 	
 	this.lastCampaignID = campaignID;
+	*/
+	if(this.callbacks[campaignID] == null) {
+		this.callbacks[campaignID] = [];
+		this.callbacks[campaignID].push(callback);
+	} else {
+		this.callbacks[campaignID].push(callback);
+		return;
+	}
+	
 
 	var $ref = this;
 
@@ -222,8 +232,8 @@ BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
   	  	
   	
   	
-  	for (var i = 0; i < $ref.callbacks.length; i++) {
-	  	var cb = $ref.callbacks[i];
+  	for (var i = 0; i < $ref.callbacks[campaignID].length; i++) {
+	  	var cb = $ref.callbacks[campaignID][i];
 	  	
 	  	cb.call(null, returnData);
   	}
