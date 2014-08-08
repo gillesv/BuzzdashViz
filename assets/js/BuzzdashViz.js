@@ -10,7 +10,7 @@ var Buzzdash = {
  
 function BuzzdashViz(el, options) {
 	this.setup(el, options);
-		
+	
 	Buzzdash.visualisations.push(this);	// add to collection
 		
 	return this;
@@ -143,6 +143,22 @@ BuzzdashViz.prototype = {
 		})();
 		
 		return this;
+	},
+	
+	timeout: null,
+	
+	play: function (delay) {
+		var $ref = this;
+	
+		if(delay == undefined) {
+			delay = 0;
+		}
+		
+		clearTimeout(this.timeout);
+		
+		this.timeout = setTimeout(function(){
+			$ref.resize();
+		}, delay);
 	},
 	
 	resize: function () {	
