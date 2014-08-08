@@ -3,23 +3,10 @@ function BuzzdashAPI() {
 }
 
 BuzzdashAPI.prototype = {
-	//lastCampaignID: null,
 	callbacks: {}
 };
 
 BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
-	/*
-	if(campaignID == this.lastCampaignID) {
-		//this.callbacks.push(callback);
-	
-		return;
-	} else {
-		this.callbacks = [];
-		this.callbacks.push(callback);
-	}
-	
-	this.lastCampaignID = campaignID;
-	*/
 	if(this.callbacks[campaignID] == null) {
 		this.callbacks[campaignID] = [];
 		this.callbacks[campaignID].push(callback);
