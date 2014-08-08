@@ -53,7 +53,9 @@ BuzzdashViz.prototype = {
 			animationDuration: 200,	// duration in frames
 			resizable: true,		// is this static or liquid?
 			startDate: null,		// optional: datestring for the start of the to be visualised metrics
-			endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
+			endDate: null,			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)
+			type: "bars",			// what kind of chart, is it a bar chart or a line-graph? (options: "bars", "line")
+			filter: "both"			// which datapoints do we visualize, shares, views or both? (options "both", "shares", "views")
 		};
 		
 		// adding JSON options
@@ -88,15 +90,24 @@ BuzzdashViz.prototype = {
 			dataOptions.endDate = $ref.$el.data("end-date");
 		}
 		
+		if($ref.$el.data("type") !== undefined) {
+			dataOptions.type = $ref.$el.data("type");
+		}
+		
+		if($ref.$el.data("filter") !== undefined) {
+			dataOptions.filter = $ref.$el.data("filter");
+		}
+		
 		$.extend($ref.options, dataOptions);
 		
-				
+		
 		if(this.options.campaignID == null || this.options.campaignID == undefined) {
 			alert("Error: can't graph results, no campaign ID was provided");
 			
 			return;
 		}
 		
+		// resizing		
 		$(window).resize(function(evt){
 			if($ref.options.resizable) {
 				$ref.resize();
