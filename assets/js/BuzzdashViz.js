@@ -1,24 +1,13 @@
-/*
- *	Buzzdash Visualisation
- *
- *	v1.0 - given basic parameters, draw a responsive and animated chart with data from Buzzdash
- *	
- *	Feature roadmap:
- *
- *	- v1.1 - retina testing
- *  - v1.1.1 - added SVG mode
- *  - v1.1.2 - added ability to crop time-slice... ladies.
- *	- v1.1.3 - fixed a bug that prevented multiple instances of BuzzdashViz running on the same page, and removed <canvas> rendering, as it's slow, inefficient and has no better browser support than SVG does
- *	- v1.2 - additional media-queries & sizes
- *	- v2.0 - interactivity: hover on bars to see actual numbers
- */
- 
 var Buzzdash = {
 	api: null,
-	visualisations: [],
-	minicharts: []
+	visualisations: []
 };
 
+
+/*
+ *	Buzzdash Visualisation
+ */
+ 
 function BuzzdashViz(el, options) {
 	this.setup(el, options);
 		
@@ -36,7 +25,7 @@ BuzzdashViz.prototype = {
 	options: {			// options read from the data-* properties
 		campaignID: null,		// ID of the campaign-results to chart: get this value from inside Buzzdash
 		animated: true,			// is the chart animated?
-		animationDuration: 60,	// duration in frames
+		animationDuration: 200,	// duration in frames
 		resizable: true,		// is this static or liquid?
 		startDate: null,		// optional: datestring for the start of the to be visualised metrics
 		endDate: null			// optional: datestring for the end of the to be visualised metrics (with one or both of these, you can show only a portion of the metrics)

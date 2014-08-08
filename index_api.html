@@ -28,6 +28,20 @@
 
 		}
 		
+		.buzzdashviz.mini {
+			top: 73.5%;
+			width: 20%;
+			height: 20%;
+			left: 2.5%;
+			z-index: 200;
+			background: transparent;
+			-webkit-box-shadow: none;
+		}
+		
+		.buzzdashviz.mini.shares {
+			left: 75.5%;
+		}
+		
 		svg {
 			display: block;
 			height: 100%;
@@ -38,12 +52,20 @@
 <body>
 
 
-	<div class="buzzdashviz first" data-campaign-id="13" data-animated="true" data-animation-duration="200" data-resizable="true">
+	<div class="buzzdashviz first">
 		<noscript>Javascript goes here</noscript>
 	</div>
 	
-	<div class="buzzdashviz second" data-campaign-id="13" data-animated="true" data-animation-duration="200" data-resizable="true">
+	<div class="buzzdashviz second">
 		<noscript>Javascript goes here</noscript>
+	</div>
+
+	<div class="buzzdashviz mini" data-type="mini" data-mini-type="views">
+		<noscript>Chart here</noscript>
+	</div>
+	
+	<div class="buzzdashviz mini shares" data-type="mini" data-mini-type="shares">
+		<noscript>Chart here</noscript>
 	</div>
 
 	
@@ -54,9 +76,12 @@
 	<script>
 		//<![CDATA[
 		$(document).ready(function() {
+			var options = {
+				campaignID: 13
+			};
+		
 			$('.buzzdashviz').each(function(i) {
-				
-				var viz = new BuzzdashViz(this);
+				var viz = new BuzzdashViz(this, options);
 			});
 		});
 		//]]>
