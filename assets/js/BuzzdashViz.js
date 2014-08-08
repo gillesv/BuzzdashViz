@@ -217,15 +217,87 @@ BuzzdashViz.prototype = {
 		
 		scale = $ref.stage.scale;
 		
-		// draw bargraphs		
-		$ref.renderSVG(views, shares, numbars, scale, barwidth, bargap);
-		
+		// draw bargraphs	
+		switch(options.type) {	
+			case "line":
+				$ref.renderLineChart(views, shares);
+			break;
+			case "bars":
+			default: 
+				$ref.renderBarChart(views, shares, numbars, scale, barwidth, bargap);
+			break;
+		}
 		// advance playhead
 		$ref.advancePlayhead(options, stage);
 	},
 	
-	// specialized drawing code for <svg>
-	renderSVG: function(views, shares, numbars, scale, barwidth, bargap) {
+	renderLineChart: function(views, shares) {
+		var $ref = this,
+			stage = this.stage,
+			options = this.options,
+			items = [],
+			color,
+			item_width = stage.width/views.length,
+			max,
+			scale;
+			
+		switch(options.filter) {
+			default:
+			case "views":
+				items = views;
+				color = stage.views_color;
+				max = stage.total_views;
+			break;
+			case "shares":
+				items = shares;
+				color = stage.shares_color;
+				max = stage.total_shares + stage.total_views;
+			break;
+		}
+		
+		var additiveCount = 0;
+		scale = (stage.height / max);
+				
+		for(var i = 0; i < items.length; i++) {
+			var item = items[i],
+				svg_line;
+				
+			if(item == undefined) {
+				break;
+			}
+			
+			if(item.svg_el == null) {
+				svg_line = $(document.createElementNS("http://www.w3.org/2000/svg", "line"));
+				
+				svg_line.attr({ stroke: color, "stroke-width": 2 });
+				
+				item.svg_el = svg_line;
+				
+				$($ref.svg).append(svg_line);
+			}
+			
+			if(item.svg_el != null) {
+				svg_line = item.svg_el;
+				
+				var x1 = i*item_width,
+					y1 = additiveCount*scale,
+					x2 = (i+1)*item_width,
+					y2 = (additiveCount + item.count)*scale;
+				
+				additiveCount += item.count;
+				
+				svg_line.attr({
+					"x1" : x1,
+					"y1" : stage.height - y1,
+					"x2" : x2,
+					"y2" : stage.height - y2
+				});
+			}
+		}
+	},
+	
+	// render the bar-chart
+	renderBarChart: function(views, shares, numbars, scale, barwidth, bargap) {
 		var $ref = this,
 			stage = this.stage,
 			options = this.options;
@@ -320,6 +392,8 @@ BuzzdashViz.prototype = {
 			bargap,
 			max_views = 0,
 			max_shares = 0,
+			total_views = 0,
+			total_shares = 0,
 			scale;
 			
 		numbars = mq.numbars;
@@ -367,12 +441,19 @@ BuzzdashViz.prototype = {
 					max_shares = shares[shares.length - 1].count;
 				}
 				
+				
+				total_views += !isNaN(timeline.num_views)? Math.max(timeline.num_views, 0) : 0;
+				total_shares += !isNaN(timeline.num_shares)? Math.max(timeline.num_shares, 0) : 0;
+				
 				counter ++;
 			}
 			
 			scale = ((stage.height) / (max_views + max_shares));
 			stage.max_views = max_views;
 			stage.max_shares = max_shares;
+			
+			stage.total_views = total_views;
+			stage.total_shares = total_shares;
 			
 			// margins
 			stage.marginw = (stage.width - (views.length * (barwidth + bargap)))/2;
@@ -546,6 +627,9 @@ BuzzdashStage.prototype = {
 	
 	max_views: 0,	// based on normalized data, not actual data
 	max_shares: 0,
+	
+	total_views: 0,	// based on actual data
+	total_shares: 0,
 	
 	playhead: 0,	// for keeping track of the animation state
 	
