@@ -12,15 +12,23 @@
  *	- v1.2 - additional media-queries & sizes
  *	- v2.0 - interactivity: hover on bars to see actual numbers
  */
+ 
+var Buzzdash = {
+	api: null,
+	visualisations: [],
+	minicharts: []
+};
 
 function BuzzdashViz(el, options) {
 	this.setup(el, options);
-	
+		
+	Buzzdash.visualisations.push(this);	// add to collection
+		
 	return this;
 }
 
 BuzzdashViz.prototype = {
-	DEBUG: true,		// toggles logs
+	DEBUG: false,		// toggles logs
 	
 	api: null,			// reference to the BuzzdashAPI
 	
@@ -48,7 +56,12 @@ BuzzdashViz.prototype = {
 		$ref.$el = $(el);
 		
 		this.stage = new BuzzdashStage();
-		this.api = new BuzzdashAPI();
+		
+		if(Buzzdash.api == null) {
+			Buzzdash.api = new BuzzdashAPI();
+		}
+		
+		this.api = Buzzdash.api;
 		
 		if(options != null) {
 			$.extend($ref.options, options);
@@ -358,7 +371,7 @@ BuzzdashViz.prototype = {
 		}
 		
 		if(this.DEBUG) {
-			console.log("Data " +  + " Normalized:");
+			console.log("Data");
 			console.log(this.stage.views);
 			console.log(this.stage.shares);
 			

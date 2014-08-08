@@ -2,7 +2,25 @@ function BuzzdashAPI() {
 	this.campaignLoaded = function(data){};
 }
 
+BuzzdashAPI.prototype = {
+	lastCampaignID: null,
+	callbacks: []
+};
+
 BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
+	if(campaignID == this.lastCampaignID) {
+		this.callbacks.push(callback);
+	
+		return;
+	} else {
+		this.callbacks = [];
+		this.callbacks.push(callback);
+	}
+	
+	this.lastCampaignID = campaignID;
+
+	var $ref = this;
+
 	var blog_date_date = Array();
 	var blog_total_mentions = Array();
 	var blog_date_date = Array();
@@ -201,14 +219,16 @@ BuzzdashAPI.prototype.loadCampaign = function(campaignID, callback) {
 	returnData["campaign"] = data.campaign;
 	
 	returnData["timeline"] = maindata;
-  	//sources["this"].campaignLoaded(returnData);
   	  	
-  	callback.call(null, returnData);
-  
-  
-	
+  	
+  	
+  	for (var i = 0; i < $ref.callbacks.length; i++) {
+	  	var cb = $ref.callbacks[i];
+	  	
+	  	cb.call(null, returnData);
+  	}
 
-	  });
+  });
 
 	  function union_arrays (x, y) {
 		var obj = {};
