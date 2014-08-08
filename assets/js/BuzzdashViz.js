@@ -156,7 +156,10 @@ BuzzdashViz.prototype = {
 		
 		clearTimeout(this.timeout);
 		
+		$($ref.svg).hide();
+		
 		this.timeout = setTimeout(function(){
+			$($ref.svg).show();
 			$ref.resize();
 		}, delay);
 	},
