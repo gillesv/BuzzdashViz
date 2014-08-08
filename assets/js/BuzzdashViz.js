@@ -20,7 +20,7 @@ function BuzzdashViz(el, options) {
 }
 
 BuzzdashViz.prototype = {
-	DEBUG: false,		// toggles logs
+	DEBUG: true,		// toggles logs
 	
 	api: null,			// reference to the BuzzdashAPI
 	
@@ -166,7 +166,6 @@ BuzzdashViz.prototype = {
 		}
 	},
 
-	
 	render: function() {
 		// local vars
 		var $ref = this,
