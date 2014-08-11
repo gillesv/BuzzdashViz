@@ -424,7 +424,12 @@ BuzzdashViz.prototype = {
 				data_per_bar,
 				counter = 0;
 			
-			data_per_bar = Math.round(data.timeline.length / numbars);
+			if(options.type == "line") {
+				data_per_bar = 1;
+			} else {
+				data_per_bar = Math.round(data.timeline.length / numbars);
+			}
+			
 			
 			if(data_per_bar == 0) {
 				data_per_bar = 1;
