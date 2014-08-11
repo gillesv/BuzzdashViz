@@ -688,7 +688,19 @@ BuzzdashStage.prototype = {
 	media: {	// "media queries" : different constants for different sizes
 		'small' :  {
 			minwidth: 0,
+			numbars: 10,
+			barwidth: 8,
+			bargap: 2
+		},
+		'small2' :  {
+			minwidth: 200,
 			numbars: 20,
+			barwidth: 8,
+			bargap: 2
+		},
+		'small3' :  {
+			minwidth: 250,
+			numbars: 25,
 			barwidth: 8,
 			bargap: 2
 		},
