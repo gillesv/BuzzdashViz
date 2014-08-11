@@ -126,8 +126,26 @@ BuzzdashViz.prototype = {
 				$numshares = $("#dg-buzzchart-numshares");
 			
 			if($numviews.length > 0){
-				$numviews.text(data['total_views'].toString());
-				$numshares.text(data['total_shares'].toString());
+				var views_string = data['total_views'].toString(),
+					shares_string = data['total_shares'].toString();
+			
+				// add comma's
+				function addCommas(string) {
+					var combine = "";
+					
+					for(var i = string.length -1; i > 0; i--) {
+						if(i%3 == 0 && i!== string.length - 1) {
+							combine += ',';
+						}
+						
+						combine += string.charAt(i).toString();
+					}
+					
+					return combine;
+				}
+				
+				$numviews.text(addCommas(views_string));
+				$numshares.text(addCommas(shares_string));
 				
 				$numviews.attr("id", null);
 				$numshares.attr("id", null);
